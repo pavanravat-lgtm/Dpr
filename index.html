@@ -1,27 +1,249 @@
 <!DOCTYPE html>
-<html lang="gu">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site DPR Portal</title>
+  <base target="_top">
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
+    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; }
+    .container { max-width: 850px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+    .header-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+    .section-title { background: #34495e; color: white; padding: 8px 12px; font-weight: bold; margin-top: 20px; border-radius: 4px; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: center; font-size: 13px; }
+    th { background: #eaeded; color: #2c3e50; }
+    
+    input[type="number"], input[type="text"], input[type="date"], select {
+      width: 95%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; text-align: right;
     }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    input[readonly] { background-color: #eef2f5; font-weight: bold; }
+    .read-only-text { text-align: left !important; }
+
+    .btn-submit {
+      width: 100%; background: #27ae60; color: white; border: none; padding: 12px;
+      font-size: 16px; font-weight: bold; border-radius: 5px; margin-top: 20px; cursor: pointer;
     }
+    .btn-submit:hover { background: #219150; }
   </style>
 </head>
 <body>
 
-  <!-- Niche src="YOUR_GOOGLE_WEB_APP_URL" ma potani Google Apps Script ni deployed link muko -->
-  <iframe src="https://script.google.com/macros/s/YOUR_EXEC_ID_HERE/exec"></iframe>
+<div class="container">
+  <h2>DAILY PROGRESS REPORT (DPR)</h2>
+
+  <!-- Header Info -->
+  <div class="header-grid">
+    <div>
+      <label><b>Select Date:</b></label>
+      <input type="date" id="dprDate" class="read-only-text" onchange="loadPreviousData()">
+    </div>
+    <div>
+      <label><b>Select Site / Location:</b></label>
+      <select id="siteSelect" class="read-only-text" onchange="loadPreviousData()">
+        <option value="">-- Choose Site --</option>
+        <option value="Shakti_Krupa_Botad">Shakti Krupa Botad</option>
+        <option value="Site_B">Site B</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Section 1: Compressor Reading -->
+  <div class="section-title">1. COMPRESSOR READINGS</div>
+  <table>
+    <tr><th>Parameter</th><th>Opening</th><th>Closing</th><th>TOTAL</th></tr>
+    <tr>
+      <td>Com. Suction</td>
+      <td><input type="number" id="comSuction_open" readonly></td>
+      <td><input type="number" id="comSuction_close" oninput="calc('comSuction')"></td>
+      <td><input type="number" id="comSuction_total" readonly></td>
+    </tr>
+    <tr>
+      <td>Com. Discharge</td>
+      <td><input type="number" id="comDischarge_open" readonly></td>
+      <td><input type="number" id="comDischarge_close" oninput="calc('comDischarge')"></td>
+      <td><input type="number" id="comDischarge_total" readonly></td>
+    </tr>
+    <tr>
+      <td>Com. HMR</td>
+      <td><input type="number" id="comHMR_open" readonly></td>
+      <td><input type="number" id="comHMR_close" oninput="calc('comHMR')"></td>
+      <td><input type="number" id="comHMR_total" readonly></td>
+    </tr>
+    <tr>
+      <td>Com. kWh</td>
+      <td><input type="number" id="comKWH_open" step="any" readonly></td>
+      <td><input type="number" id="comKWH_close" step="any" oninput="calc('comKWH')"></td>
+      <td><input type="number" id="comKWH_total" step="any" readonly></td>
+    </tr>
+  </table>
+
+  <!-- Section 2: MTR (TOT) DISP -->
+  <div class="section-title">2. MTR (TOT) DISPENSER</div>
+  <table>
+    <tr><th>Line</th><th>Opening</th><th>Closing</th><th>TOTAL</th></tr>
+    <tr><td>1A</td><td><input type="number" id="mtr1A_open" step="any" readonly></td><td><input type="number" id="mtr1A_close" step="any" oninput="calcDisp('mtr')"></td><td><input type="number" id="mtr1A_total" readonly></td></tr>
+    <tr><td>1B</td><td><input type="number" id="mtr1B_open" step="any" readonly></td><td><input type="number" id="mtr1B_close" step="any" oninput="calcDisp('mtr')"></td><td><input type="number" id="mtr1B_total" readonly></td></tr>
+    <tr><td>2A</td><td><input type="number" id="mtr2A_open" step="any" readonly></td><td><input type="number" id="mtr2A_close" step="any" oninput="calcDisp('mtr')"></td><td><input type="number" id="mtr2A_total" readonly></td></tr>
+    <tr><td>2B</td><td><input type="number" id="mtr2B_open" step="any" readonly></td><td><input type="number" id="mtr2B_close" step="any" oninput="calcDisp('mtr')"></td><td><input type="number" id="mtr2B_total" readonly></td></tr>
+    <tr><th colspan="3">MTR GRAND TOTAL</th><td><input type="number" id="mtr_grandTotal" readonly></td></tr>
+  </table>
+
+  <!-- Section 3: FMT (TOT) DISP -->
+  <div class="section-title">3. FMT (TOT) DISPENSER</div>
+  <table>
+    <tr><th>Line</th><th>Opening</th><th>Closing</th><th>TOTAL</th></tr>
+    <tr><td>1A</td><td><input type="number" id="fmt1A_open" step="any" readonly></td><td><input type="number" id="fmt1A_close" step="any" oninput="calcDisp('fmt')"></td><td><input type="number" id="fmt1A_total" readonly></td></tr>
+    <tr><td>1B</td><td><input type="number" id="fmt1B_open" step="any" readonly></td><td><input type="number" id="fmt1B_close" step="any" oninput="calcDisp('fmt')"></td><td><input type="number" id="fmt1B_total" readonly></td></tr>
+    <tr><td>2A</td><td><input type="number" id="fmt2A_open" step="any" readonly></td><td><input type="number" id="fmt2A_close" step="any" oninput="calcDisp('fmt')"></td><td><input type="number" id="fmt2A_total" readonly></td></tr>
+    <tr><td>2B</td><td><input type="number" id="fmt2B_open" step="any" readonly></td><td><input type="number" id="fmt2B_close" step="any" oninput="calcDisp('fmt')"></td><td><input type="number" id="fmt2B_total" readonly></td></tr>
+    <tr><th colspan="3">FMT GRAND TOTAL</th><td><input type="number" id="fmt_grandTotal" readonly></td></tr>
+  </table>
+
+  <!-- Section 4: Power & Flow -->
+  <div class="section-title">4. POWER & FLOW READINGS</div>
+  <table>
+    <tr><th>Parameter</th><th>Opening</th><th>Closing</th><th>TOTAL</th></tr>
+    <tr><td>PGVCL kWh</td><td><input type="number" id="pgvclKwh_open" readonly></td><td><input type="number" id="pgvclKwh_close" oninput="calc('pgvclKwh')"></td><td><input type="number" id="pgvclKwh_total" readonly></td></tr>
+    <tr><td>PGVCL kVARh</td><td><input type="number" id="pgvclKvarh_open" readonly></td><td><input type="number" id="pgvclKvarh_close" oninput="calc('pgvclKvarh')"></td><td><input type="number" id="pgvclKvarh_total" readonly></td></tr>
+    <tr><td>Panel kWh</td><td><input type="number" id="panelKwh_open" step="any" readonly></td><td><input type="number" id="panelKwh_close" step="any" oninput="calc('panelKwh')"></td><td><input type="number" id="panelKwh_total" readonly></td></tr>
+    <tr><td>Suction Flow</td><td><input type="number" id="suctionFlow_open" readonly></td><td><input type="number" id="suctionFlow_close" oninput="calc('suctionFlow')"></td><td><input type="number" id="suctionFlow_total" readonly></td></tr>
+    <tr><td>Discharge Flow</td><td><input type="number" id="dischargeFlow_open" readonly></td><td><input type="number" id="dischargeFlow_close" oninput="calc('dischargeFlow')"></td><td><input type="number" id="dischargeFlow_total" readonly></td></tr>
+  </table>
+
+  <!-- Section 5: Remarks -->
+  <div class="section-title">5. REMARKS & OIL MAINTENANCE</div>
+  <div style="margin-top:10px;">
+    <label><b>Power Cut Remarks (GEB/PGVCL):</b></label>
+    <input type="text" id="powerCutRemarks" class="read-only-text" placeholder="e.g. PGVCL Power Cut 08:04 AM to 09:32 AM">
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+      <div>
+        <label><b>Oil Top Up:</b></label>
+        <input type="text" id="oilTopUp" class="read-only-text" placeholder="e.g. 320 = 00 / 220 = 00">
+      </div>
+      <div>
+        <label><b>Oil Drain:</b></label>
+        <input type="text" id="oilDrain" class="read-only-text" placeholder="e.g. 90 ml">
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-submit" onclick="submitData()">Submit DPR for Approval</button>
+</div>
+
+<script>
+  window.onload = function() {
+    document.getElementById('dprDate').valueAsDate = new Date();
+  };
+
+  function calc(prefix) {
+    var open = parseFloat(document.getElementById(prefix + '_open').value) || 0;
+    var close = parseFloat(document.getElementById(prefix + '_close').value) || 0;
+    var total = close - open;
+    document.getElementById(prefix + '_total').value = total.toFixed(2);
+  }
+
+  function calcDisp(type) {
+    var lines = ['1A', '1B', '2A', '2B'];
+    var grandTotal = 0;
+    
+    lines.forEach(function(line) {
+      var open = parseFloat(document.getElementById(type + line + '_open').value) || 0;
+      var close = parseFloat(document.getElementById(type + line + '_close').value) || 0;
+      var tot = close - open;
+      document.getElementById(type + line + '_total').value = tot.toFixed(2);
+      grandTotal += tot;
+    });
+
+    document.getElementById(type + '_grandTotal').value = grandTotal.toFixed(2);
+  }
+
+  function loadPreviousData() {
+    var site = document.getElementById('siteSelect').value;
+    if (!site) return;
+
+    google.script.run.withSuccessHandler(function(prevData) {
+      // Map previous closing values to current opening fields automatically
+      if(prevData.comSuction_close) document.getElementById('comSuction_open').value = prevData.comSuction_close;
+      if(prevData.comDischarge_close) document.getElementById('comDischarge_open').value = prevData.comDischarge_close;
+      if(prevData.comHMR_close) document.getElementById('comHMR_open').value = prevData.comHMR_close;
+      if(prevData.comKWH_close) document.getElementById('comKWH_open').value = prevData.comKWH_close;
+      
+      // Additional mappings...
+    }).getPreviousClosing(site);
+  }
+
+  function submitData() {
+    var payload = {
+      date: document.getElementById('dprDate').value,
+      siteName: document.getElementById('siteSelect').value,
+      comSuction_open: document.getElementById('comSuction_open').value,
+      comSuction_close: document.getElementById('comSuction_close').value,
+      comSuction_total: document.getElementById('comSuction_total').value,
+      comDischarge_open: document.getElementById('comDischarge_open').value,
+      comDischarge_close: document.getElementById('comDischarge_close').value,
+      comDischarge_total: document.getElementById('comDischarge_total').value,
+      comHMR_open: document.getElementById('comHMR_open').value,
+      comHMR_close: document.getElementById('comHMR_close').value,
+      comHMR_total: document.getElementById('comHMR_total').value,
+      comKWH_open: document.getElementById('comKWH_open').value,
+      comKWH_close: document.getElementById('comKWH_close').value,
+      comKWH_total: document.getElementById('comKWH_total').value,
+
+      mtr1A_open: document.getElementById('mtr1A_open').value,
+      mtr1A_close: document.getElementById('mtr1A_close').value,
+      mtr1A_total: document.getElementById('mtr1A_total').value,
+      mtr1B_open: document.getElementById('mtr1B_open').value,
+      mtr1B_close: document.getElementById('mtr1B_close').value,
+      mtr1B_total: document.getElementById('mtr1B_total').value,
+      mtr2A_open: document.getElementById('mtr2A_open').value,
+      mtr2A_close: document.getElementById('mtr2A_close').value,
+      mtr2A_total: document.getElementById('mtr2A_total').value,
+      mtr2B_open: document.getElementById('mtr2B_open').value,
+      mtr2B_close: document.getElementById('mtr2B_close').value,
+      mtr2B_total: document.getElementById('mtr2B_total').value,
+      mtr_grandTotal: document.getElementById('mtr_grandTotal').value,
+
+      fmt1A_open: document.getElementById('fmt1A_open').value,
+      fmt1A_close: document.getElementById('fmt1A_close').value,
+      fmt1A_total: document.getElementById('fmt1A_total').value,
+      fmt1B_open: document.getElementById('fmt1B_open').value,
+      fmt1B_close: document.getElementById('fmt1B_close').value,
+      fmt1B_total: document.getElementById('fmt1B_total').value,
+      fmt2A_open: document.getElementById('fmt2A_open').value,
+      fmt2A_close: document.getElementById('fmt2A_close').value,
+      fmt2A_total: document.getElementById('fmt2A_total').value,
+      fmt2B_open: document.getElementById('fmt2B_open').value,
+      fmt2B_close: document.getElementById('fmt2B_close').value,
+      fmt2B_total: document.getElementById('fmt2B_total').value,
+      fmt_grandTotal: document.getElementById('fmt_grandTotal').value,
+
+      pgvclKwh_open: document.getElementById('pgvclKwh_open').value,
+      pgvclKwh_close: document.getElementById('pgvclKwh_close').value,
+      pgvclKwh_total: document.getElementById('pgvclKwh_total').value,
+      pgvclKvarh_open: document.getElementById('pgvclKvarh_open').value,
+      pgvclKvarh_close: document.getElementById('pgvclKvarh_close').value,
+      pgvclKvarh_total: document.getElementById('pgvclKvarh_total').value,
+      panelKwh_open: document.getElementById('panelKwh_open').value,
+      panelKwh_close: document.getElementById('panelKwh_close').value,
+      panelKwh_total: document.getElementById('panelKwh_total').value,
+      suctionFlow_open: document.getElementById('suctionFlow_open').value,
+      suctionFlow_close: document.getElementById('suctionFlow_close').value,
+      suctionFlow_total: document.getElementById('suctionFlow_total').value,
+      dischargeFlow_open: document.getElementById('dischargeFlow_open').value,
+      dischargeFlow_close: document.getElementById('dischargeFlow_close').value,
+      dischargeFlow_total: document.getElementById('dischargeFlow_total').value,
+
+      powerCutRemarks: document.getElementById('powerCutRemarks').value,
+      oilTopUp: document.getElementById('oilTopUp').value,
+      oilDrain: document.getElementById('oilDrain').value
+    };
+
+    google.script.run.withSuccessHandler(function(res) {
+      alert("DPR Entry successfully submit ho gayi!\nRequest ID: " + res.reqId);
+    }).submitDPRData(payload);
+  }
+</script>
 
 </body>
 </html>
